@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Votação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Seção de Upload */
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .upload-section h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .upload-box {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-box.has-image {
+            border-style: solid;
+            border-color: #667eea;
+            padding: 10px;
+        }
+
+        .upload-box input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .upload-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .upload-box.has-image .upload-preview {
+            display: block;
+        }
+
+        .upload-box.has-image .upload-icon,
+        .upload-box.has-image .upload-text {
+            display: none;
+        }
+
+        .candidate-name-input {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .candidate-name-input:focus {
+            border-color: #667eea;
+        }
+
+        /* Seção de Votação */
+        .voting-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .voting-section h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+
+        .candidates-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .candidate-card {
+            background: linear-gradient(145deg, #f5f7fa 0%, #e4e8f0 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .candidate-card.winner {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            border: 2px solid #ffd700;
+        }
+
+        .candidate-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+
+        .candidate-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .vote-count {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .vote-percentage {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .vote-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-weight: bold;
+        }
+
+        .vote-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .vote-btn:active {
+            transform: translateY(0);
+        }
+
+        .vote-btn.candidate2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .vote-btn.candidate2:hover {
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+
+        /* Barra de Progresso */
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 50px;
+            height: 40px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 50px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .progress-bar.candidate1-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            float: left;
+        }
+
+        .progress-bar.candidate2-bar {
+            background: linear-gradient(90deg, #f5576c 0%, #f093fb 100%);
+            float: right;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card.difference {
+            background: linear-gradient(145deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.total {
+            background: linear-gradient(145deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* Botões de Controle */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .control-btn.danger {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .control-btn.danger:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* ===== BOTÃO +10 VOTOS (ROSA) ===== */
+        .rosa-section {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+            text-align: center;
+        }
+
+        .rosa-section h2 {
+            color: #c2185b;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+
+        .rosa-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .rosa-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(194, 24, 89, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .rosa-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .rosa-card .rosa-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .rosa-btn {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c2185b 100%);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(194, 24, 89, 0.4);
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .rosa-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(194, 24, 89, 0.6);
+        }
+
+        .rosa-btn:active {
+            transform: scale(0.98);
+        }
+
+        .rosa-btn .rosa-icon {
+            font-size: 1.4rem;
+            margin-right: 6px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .upload-grid,
+            .candidates-grid,
+            .rosa-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animação de voto */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .vote-added {
+            animation: pulse 0.3s ease;
+        }
+
+        /* Badge de liderança */
+        .leader-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffd700;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: none;
+        }
+
+        .candidate-card.winner .leader-badge {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗳️ Sistema de Votação</h1>
+
+        <!-- Seção de Upload -->
+        <div class="upload-section">
+            <h2>📸 Envie as Fotos dos Candidatos</h2>
+            <div class="upload-grid">
+                <div class="upload-box" onclick="document.getElementById('file1').click()">
+                    <input type="file" id="file1" accept="image/*" onchange="handleImageUpload(this, 1)">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Clique para enviar foto do Candidato 1</div>
+                    <img class="upload-preview" id="preview1" alt="Candidato 1">
+                    <input type="text" class="candidate-name-input" id="name1" placeholder="Nome do Candidato 1" value="Candidato 1" onchange="updateDisplay()">
+                </div>
+                <div class="upload-box" onclick="document.getElementById('file2').click()">
+                    <input type="file" id="file2" accept="image/*" onchange="handleImageUpload(this, 2)">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Clique para enviar foto do Candidato 2</div>
+                    <img class="upload-preview" id="preview2" alt="Candidato 2">
+                    <input type="text" class="candidate-name-input" id="name2" placeholder="Nome do Candidato 2" value="Candidato 2" onchange="updateDisplay()">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SEÇÃO ROSA: +10 VOTOS ===== -->
+        <div class="rosa-section">
+            <h2>🌹 CADA ROSA AUMENTA 10 VOTOS 🌹</h2>
+            <div class="rosa-grid">
+                <div class="rosa-card">
+                    <div class="rosa-name" id="rosaName1">Candidato 1</div>
+                    <button class="rosa-btn" onclick="addRosaVotes(1)">
+                        <span class="rosa-icon">🌹</span> +10 Votos
+                    </button>
+                </div>
+                <div class="rosa-card">
+                    <div class="rosa-name" id="rosaName2">Candidato 2</div>
+                    <button class="rosa-btn" onclick="addRosaVotes(2)">
+                        <span class="rosa-icon">🌹</span> +10 Votos
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Votação -->
+        <div class="voting-section">
+            <h2>✅ Votar Individualmente</h2>
+
+            <div class="candidates-grid">
+                <div class="candidate-card" id="card1">
+                    <div class="leader-badge">👑 Líder</div>
+                    <img class="candidate-photo" id="photo1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3ESem Foto%3C/text%3E%3C/svg%3E" alt="Candidato 1">
+                    <div class="candidate-name" id="displayName1">Candidato 1</div>
+                    <div class="vote-count" id="votes1">0</div>
+                    <div class="vote-percentage" id="percent1">0%</div>
+                    <button class="vote-btn" onclick="addVote(1)">✅ Votar</button>
+                </div>
+
+                <div class="candidate-card" id="card2">
+                    <div class="leader-badge">👑 Líder</div>
+                    <img class="candidate-photo" id="photo2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3ESem Foto%3C/text%3E%3C/svg%3E" alt="Candidato 2">
+                    <div class="candidate-name" id="displayName2">Candidato 2</div>
+                    <div class="vote-count" id="votes2">0</div>
+                    <div class="vote-percentage" id="percent2">0%</div>
+                    <button class="vote-btn candidate2" onclick="addVote(2)">✅ Votar</button>
+                </div>
+            </div>
+
+            <!-- Barra de Progresso Comparativa -->
+            <div style="margin: 30px 0;">
+                <div class="progress-container">
+                    <div class="progress-bar candidate1-bar" id="bar1" style="width: 50%">50%</div>
+                    <div class="progress-bar candidate2-bar" id="bar2" style="width: 50%">50%</div>
+                </div>
+                <div class="progress-labels">
+                    <span id="label1">Candidato 1: 0 votos</span>
+                    <span id="label2">Candidato 2: 0 votos</span>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total de Votos</div>
+                    <div class="stat-value" id="totalVotes">0</div>
+                </div>
+                <div class="stat-card difference">
+                    <div class="stat-label">Diferença</div>
+                    <div class="stat-value" id="difference">0 votos</div>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-label">Diferença %</div>
+                    <div class="stat-value" id="diffPercent">0%</div>
+                </div>
+            </div>
+
+            <!-- Controles -->
+            <div class="controls">
+                <button class="control-btn" onclick="undoVote(1)">↩️ Desfazer Voto Candidato 1</button>
+                <button class="control-btn" onclick="undoVote(2)">↩️ Desfazer Voto Candidato 2</button>
+                <button class="control-btn danger" onclick="resetVotes()">🗑️ Zerar Votação</button>
+                <button class="control-btn" onclick="exportResults()">📊 Exportar Resultados</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado da votação
+        let votes = {
+            candidate1: 0,
+            candidate2: 0
+        };
+
+        let images = {
+            candidate1: null,
+            candidate2: null
+        };
+
+        // Carregar dados salvos
+        function loadData() {
+            const saved = localStorage.getItem('votingData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                votes = data.votes || { candidate1: 0, candidate2: 0 };
+                images = data.images || { candidate1: null, candidate2: null };
+
+                // Restaurar nomes
+                if (data.names) {
+                    document.getElementById('name1').value = data.names.candidate1 || 'Candidato 1';
+                    document.getElementById('name2').value = data.names.candidate2 || 'Candidato 2';
+                }
+
+                // Restaurar imagens
+                if (images.candidate1) {
+                    document.getElementById('preview1').src = images.candidate1;
+                    document.getElementById('photo1').src = images.candidate1;
+                    document.querySelectorAll('.upload-box')[0].classList.add('has-image');
+                }
+                if (images.candidate2) {
+                    document.getElementById('preview2').src = images.candidate2;
+                    document.getElementById('photo2').src = images.candidate2;
+                    document.querySelectorAll('.upload-box')[1].classList.add('has-image');
+                }
+
+                updateDisplay();
+            }
+        }
+
+        // Salvar dados
+        function saveData() {
+            const data = {
+                votes: votes,
+                images: images,
+                names: {
+                    candidate1: document.getElementById('name1').value,
+                    candidate2: document.getElementById('name2').value
+                }
+            };
+            localStorage.setItem('votingData', JSON.stringify(data));
+        }
+
+        // Upload de imagem
+        function handleImageUpload(input, candidate) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgData = e.target.result;
+                    images['candidate' + candidate] = imgData;
+
+                    document.getElementById('preview' + candidate).src = imgData;
+                    document.getElementById('photo' + candidate).src = imgData;
+                    input.parentElement.classList.add('has-image');
+
+                    saveData();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Adicionar voto normal
+        function addVote(candidate) {
+            votes['candidate' + candidate]++;
+
+            // Animação
+            const card = document.getElementById('card' + candidate);
+            card.classList.add('vote-added');
+            setTimeout(() => card.classList.remove('vote-added'), 300);
+
+            saveData();
+            updateDisplay();
+        }
+
+        // ===== NOVO: Adicionar 10 votos (Rosa) =====
+        function addRosaVotes(candidate) {
+            votes['candidate' + candidate] += 10;
+
+            // Animação no card da seção rosa
+            const rosaCard = document.querySelectorAll('.rosa-card')[candidate - 1];
+            rosaCard.style.transform = 'scale(1.08)';
+            setTimeout(() => rosaCard.style.transform = 'scale(1)', 200);
+
+            saveData();
+            updateDisplay();
+        }
+
+        // Desfazer voto
+        function undoVote(candidate) {
+            if (votes['candidate' + candidate] > 0) {
+                votes['candidate' + candidate]--;
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // Zerar votação
+        function resetVotes() {
+            if (confirm('Tem certeza que deseja zerar todos os votos?')) {
+                votes = { candidate1: 0, candidate2: 0 };
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // Atualizar display
+        function updateDisplay() {
+            const total = votes.candidate1 + votes.candidate2;
+            const name1 = document.getElementById('name1').value || 'Candidato 1';
+            const name2 = document.getElementById('name2').value || 'Candidato 2';
+
+            // Atualizar nomes em todas as seções
+            document.getElementById('displayName1').textContent = name1;
+            document.getElementById('displayName2').textContent = name2;
+            document.getElementById('rosaName1').textContent = name1;
+            document.getElementById('rosaName2').textContent = name2;
+            document.getElementById('label1').textContent = name1 + ': ' + votes.candidate1 + ' votos';
+            document.getElementById('label2').textContent = name2 + ': ' + votes.candidate2 + ' votos';
+
+            // Atualizar contagem
+            document.getElementById('votes1').textContent = votes.candidate1;
+            document.getElementById('votes2').textContent = votes.candidate2;
+
+            // Calcular porcentagens
+            let percent1 = total > 0 ? ((votes.candidate1 / total) * 100).toFixed(1) : 0;
+            let percent2 = total > 0 ? ((votes.candidate2 / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('percent1').textContent = percent1 + '%';
+            document.getElementById('percent2').textContent = percent2 + '%';
+
+            // Atualizar barras
+            document.getElementById('bar1').style.width = percent1 + '%';
+            document.getElementById('bar1').textContent = percent1 > 10 ? percent1 + '%' : '';
+            document.getElementById('bar2').style.width = percent2 + '%';
+            document.getElementById('bar2').textContent = percent2 > 10 ? percent2 + '%' : '';
+
+            // Estatísticas
+            document.getElementById('totalVotes').textContent = total;
+            const diff = Math.abs(votes.candidate1 - votes.candidate2);
+            document.getElementById('difference').textContent = diff + ' votos';
+
+            // Diferença percentual
+            let diffPercent = 0;
+            if (total > 0) {
+                diffPercent = ((diff / total) * 100).toFixed(1);
+            }
+            document.getElementById('diffPercent').textContent = diffPercent + '%';
+
+            // Destacar líder
+            document.getElementById('card1').classList.remove('winner');
+            document.getElementById('card2').classList.remove('winner');
+
+            if (votes.candidate1 > votes.candidate2) {
+                document.getElementById('card1').classList.add('winner');
+            } else if (votes.candidate2 > votes.candidate1) {
+                document.getElementById('card2').classList.add('winner');
+            }
+
+            saveData();
+        }
+
+        // Exportar resultados
+        function exportResults() {
+            const name1 = document.getElementById('name1').value || 'Candidato 1';
+            const name2 = document.getElementById('name2').value || 'Candidato 2';
+            const total = votes.candidate1 + votes.candidate2;
+            const percent1 = total > 0 ? ((votes.candidate1 / total) * 100).toFixed(1) : 0;
+            const percent2 = total > 0 ? ((votes.candidate2 / total) * 100).toFixed(1) : 0;
+
+            const results = `
+RESULTADOS DA VOTAÇÃO
+=====================
+Data: ${new Date().toLocaleString('pt-BR')}
+
+${name1}:
+- Votos: ${votes.candidate1}
+- Porcentagem: ${percent1}%
+
+${name2}:
+- Votos: ${votes.candidate2}
+- Porcentagem: ${percent2}%
+
+---------------------
+Total de votos: ${total}
+Diferença: ${Math.abs(votes.candidate1 - votes.candidate2)} votos
+Diferença percentual: ${total > 0 ? ((Math.abs(votes.candidate1 - votes.candidate2) / total) * 100).toFixed(1) : 0}%
+Vencedor: ${votes.candidate1 > votes.candidate2 ? name1 : votes.candidate2 > votes.candidate1 ? name2 : 'Empate'}
+            `.trim();
+
+            const blob = new Blob([results], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resultados_votacao.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Inicializar
+        loadData();
+    </script>
+</body>
+</html>
